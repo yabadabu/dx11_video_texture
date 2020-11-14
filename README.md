@@ -11,6 +11,7 @@ Instead, the directX textures I use have the format DXGI_FORMAT_R8_UNORM, and in
 
 Just for reference, a frame with size 8x4 returned by the MF library in IYUV has the following layout:
 
+```
   YYYY YYYY
   YYYY YYYY
   YYYY YYYY
@@ -19,9 +20,11 @@ Just for reference, a frame with size 8x4 returned by the MF library in IYUV has
   UUUU
   VVVV
   VVVV
+```
 
 So, we split the data in two textures. Luminance 8x4, and UV 4x4
 
+```
   YYYY YYYY
   YYYY YYYY
   YYYY YYYY
@@ -31,6 +34,7 @@ So, we split the data in two textures. Luminance 8x4, and UV 4x4
   UUUU
   VVVV
   VVVV
+```
 
 Accessing the Y texture requires no modification. For U divide the y component of the texture coordinate by 2. Finally, for the V divide and add 0.5 to match the start of the V data in the texture. Then use your favourite YUV 2 RGB formula to obtain the final RGB color.
 
