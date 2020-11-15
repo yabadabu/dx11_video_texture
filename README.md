@@ -1,4 +1,4 @@
-![frame.png](frame)
+![Sample Frame](frame.png)
 
 ### Sample project to play .mp4 files with DX11
 
