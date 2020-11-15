@@ -11,6 +11,7 @@
     <ClInclude Include="dx11_basic.h" />
     <ClInclude Include="app.h" />
     <ClInclude Include="video_texture.h" />
+    <ClInclude Include="clock.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

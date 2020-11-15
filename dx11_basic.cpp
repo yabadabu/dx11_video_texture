@@ -11,6 +11,8 @@ namespace Render {
   ID3D11Device* device = nullptr;
   ID3D11DeviceContext* ctx = nullptr;
   ID3D11RenderTargetView* render_target_view = nullptr;
+  ID3D11SamplerState*     sampler_clamp_linear = nullptr;
+
   uint32_t                width = 0;
   uint32_t                height = 0;
 
@@ -68,10 +70,25 @@ namespace Render {
     vp.TopLeftY = 0;
     ctx->RSSetViewports(1, &vp);
 
+    // Create the sample state
+    D3D11_SAMPLER_DESC sampDesc = {};
+    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    hr = device->CreateSamplerState(&sampDesc, &sampler_clamp_linear);
+    if (FAILED(hr))
+      return false;
+    ctx->PSSetSamplers(0, 1, &sampler_clamp_linear);
+
     return true;
   }
 
   void destroy() {
+    SAFE_RELEASE(sampler_clamp_linear);
     SAFE_RELEASE(render_target_view);
     SAFE_RELEASE(swap_chain);
     SAFE_RELEASE(ctx);
