@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "dx11_basic.h"
 #include "app.h"
+#include "clock.h"
 
 //--------------------------------------------------------------------------------------
 // Called every time the application receives a message
@@ -61,37 +62,6 @@ bool initWindow(HINSTANCE hInstance, int nCmdShow, HWND* hWnd) {
 }
 
 // --------------------------------------------------------------------------------------
-class CClock {
-  uint64_t time_stamp;
-
-public:
-
-  CClock() {
-    time_stamp = timeStamp();
-  }
-
-  static uint64_t timeStamp() {
-    uint64_t now;
-    ::QueryPerformanceCounter((LARGE_INTEGER*)&now);
-    return now;
-  }
-
-  float elapsed() {
-    uint64_t now = timeStamp();
-    uint64_t delta_ticks = now - time_stamp;
-
-    LARGE_INTEGER freq;
-    if (::QueryPerformanceFrequency(&freq)) {
-      float delta_secs = (float)(delta_ticks) / (float)freq.QuadPart;
-      time_stamp = now;
-      return delta_secs;
-    }
-    return 0.f;
-  }
-};
-
-
-// --------------------------------------------------------------------------------------
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
   UNREFERENCED_PARAMETER(hPrevInstance);
@@ -105,7 +75,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
   if (!app.create(hWnd))
     return -1;
 
-  CClock clock;
+  Clock clock;
 
   // Main message loop
   MSG msg = { 0 };

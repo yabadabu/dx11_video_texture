@@ -24,6 +24,8 @@ bool CApp::create(HWND hWnd) {
     Vector4 color;
   };
 
+  // -------------------------------------------
+  // A simple quad with 6 vertices
   {
     Vector4 white(1, 1, 1, 1);
     std::vector< Vertex> vtxs = {
@@ -38,6 +40,8 @@ bool CApp::create(HWND hWnd) {
       return false;
   }
 
+  // -------------------------------------------
+  // A grid
   {
     int samples = 5;
     std::vector< Vertex> vtxs;
@@ -58,6 +62,7 @@ bool CApp::create(HWND hWnd) {
       return false;
   }
 
+  // Ctes for the camera and world matrix
   if (!cte.create(0))
     return false;
 
