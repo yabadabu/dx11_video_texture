@@ -13,16 +13,16 @@ namespace Render {
   ID3D11RenderTargetView* render_target_view = nullptr;
   ID3D11SamplerState*     sampler_clamp_linear = nullptr;
 
-  uint32_t                width = 0;
-  uint32_t                height = 0;
+  uint32_t                render_width = 0;
+  uint32_t                render_height = 0;
 
   bool create(HWND hWnd) {
     HRESULT hr;
 
     RECT rc;
     GetClientRect(hWnd, &rc);
-    width = rc.right - rc.left;
-    height = rc.bottom - rc.top;
+    render_width = rc.right - rc.left;
+    render_height = rc.bottom - rc.top;
 
     D3D_FEATURE_LEVEL featureLevels[] = {
         D3D_FEATURE_LEVEL_11_0,
@@ -32,8 +32,8 @@ namespace Render {
 
     DXGI_SWAP_CHAIN_DESC sd = {};
     sd.BufferCount = 1;
-    sd.BufferDesc.Width = width;
-    sd.BufferDesc.Height = height;
+    sd.BufferDesc.Width = render_width;
+    sd.BufferDesc.Height = render_height;
     sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     sd.BufferDesc.RefreshRate.Numerator = 60;
     sd.BufferDesc.RefreshRate.Denominator = 1;
@@ -62,8 +62,8 @@ namespace Render {
 
     // Setup the viewport
     D3D11_VIEWPORT vp;
-    vp.Width = (FLOAT)width;
-    vp.Height = (FLOAT)height;
+    vp.Width = (FLOAT)render_width;
+    vp.Height = (FLOAT)render_height;
     vp.MinDepth = 0.0f;
     vp.MaxDepth = 1.0f;
     vp.TopLeftX = 0;
@@ -272,24 +272,34 @@ namespace Render {
     SAFE_RELEASE(shader_resource_view);
   }
 
-  bool Texture::updateFrom(const uint8_t* data, size_t data_size) {
+  bool Texture::updateFromIYUV(const uint8_t* data, size_t data_size) {
     assert(data);
     D3D11_MAPPED_SUBRESOURCE ms;
     HRESULT hr = ctx->Map(texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
     if (FAILED(hr))
       return false;
 
-    uint32_t bytes_per_texel = 4;
-    if (format == DXGI_FORMAT_R8_UNORM)
-      bytes_per_texel = 1;
+    uint32_t bytes_per_texel = 1;
+    assert(format == DXGI_FORMAT_R8_UNORM);
+    assert(data_size == xres * yres * 3 / 4);
 
     const uint8_t* src = data;
     uint8_t*       dst = (uint8_t*)ms.pData;
 
+    // Copy the Y lines
+    uint32_t nlines = yres / 2;
     uint32_t bytes_per_row = xres * bytes_per_texel;
-    for (uint32_t y = 0; y < yres; ++y) {
+    for (uint32_t y = 0; y < nlines; ++y) {
       memcpy(dst, src, bytes_per_row);
       src += bytes_per_row;
+      dst += ms.RowPitch;
+    }
+
+    // Now the U and V lines, need to add Width/2 pixels of padding between each line
+    uint32_t uv_bytes_per_row = bytes_per_row / 2;
+    for (uint32_t y = 0; y < nlines; ++y) {
+      memcpy(dst, src, uv_bytes_per_row);
+      src += uv_bytes_per_row;
       dst += ms.RowPitch;
     }
 

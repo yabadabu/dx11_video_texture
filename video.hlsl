@@ -1,8 +1,7 @@
 #include "common.hlsl"
 
 //--------------------------------------------------------------------------------------
-Texture2D    txY          : register(t0);
-Texture2D    txUV         : register(t1);
+Texture2D    txYUV        : register(t0);
 SamplerState samLinear    : register(s0);
 
 //--------------------------------------------------------------------------------------
@@ -43,8 +42,8 @@ float3 YUVToRGB(float Luma, float2 Chroma)
 }
 
 float4 PS(v2f input) : SV_Target {
-  float y = txY.Sample(samLinear, float2(input.Tex.x, input.Tex.y)).r;
-  float u = txUV.Sample(samLinear, float2(input.Tex.x,        input.Tex.y * 0.5f)).r;
-  float v = txUV.Sample(samLinear, float2(input.Tex.x, 0.5f + input.Tex.y * 0.5f)).r;
+  float y = txYUV.Sample(samLinear, float2(input.Tex.x, input.Tex.y * 0.5)).r;
+  float u = txYUV.Sample(samLinear, float2(input.Tex.x*0.5, 0.50 + input.Tex.y * 0.25)).r;
+  float v = txYUV.Sample(samLinear, float2(input.Tex.x*0.5, 0.75 + input.Tex.y * 0.25)).r;
   return float4(YUVToRGB(y, float2(u,v)), 1.f);
 }

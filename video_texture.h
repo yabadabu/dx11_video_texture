@@ -17,7 +17,7 @@ struct VideoTexture {
   void pause();
   void resume();
   bool hasFinished();
-  Render::Texture* getYTexture();
-  Render::Texture* getUVTexture();
+  Render::Texture* getTexture();
+  float getAspectRatio() const;
 };
 

@@ -2,6 +2,7 @@
 #include <string>
 #include <cassert>
 #include "video_texture.h"
+#include "clock.h"
 
 // ----------------------------------
 // MF API usage copied from mediafoundationsamples\MFMP4ToYUVWithoutMFT
@@ -19,7 +20,22 @@
 #pragma comment(lib, "wmcodecdspuuid.lib")
 
 #define CHECK_HR(x, msg) hr = x; if( hr != S_OK ) { dbg(msg); return false; }
+
+//#define SHOW_DEBUG
+#if SHOW_DEBUG
+static void dbg(const char* format, ...) {
+  va_list argptr;
+  va_start(argptr, format);
+  char dest[1024 * 4];
+  int n = _vsnprintf(dest, sizeof(dest), format, argptr);
+  dest[n] = 0x00;
+  va_end(argptr);
+  ::OutputDebugString(dest);
+}
+#else
 #define dbg(...)
+#endif
+
 
 // ---------------------------------------------------------------------------
 #ifndef IF_EQUAL_RETURN
@@ -371,8 +387,7 @@ struct VideoTexture::InternalData {
   int        sampleCount = 0;
   DWORD      sampleFlags = 0;
 
-  Render::Texture* target_y_texture = nullptr;
-  Render::Texture* target_uv_texture = nullptr;
+  Render::Texture* target_texture = nullptr;
   uint32_t  width = 0;
   uint32_t  height = 0;
   float     fps = 0.0f;
@@ -484,10 +499,8 @@ public:
 
     clock_time = 0.0f;
 
-    if (target_y_texture)
-      target_y_texture->destroy();
-    if (target_uv_texture)
-      target_uv_texture->destroy();
+    if (target_texture)
+      target_texture->destroy();
 
     // Just to ensure we have something as the first frame, and also ensure we have the real required size (height % 16 should be 0)
     update(0.0f);
@@ -581,22 +594,18 @@ public:
       assert(hr == S_OK);
 
       // Some videos report one resolution and after the first frame change the height to the next multiple of 16 (using the event MF_SOURCE_READERF_CURRENTMEDIATYPECHANGED)
-      if (!target_y_texture) {
-        target_y_texture = new Render::Texture();
-        if (!target_y_texture->create(width, height, DXGI_FORMAT_R8_UNORM, true))
+      if (!target_texture) {
+        target_texture = new Render::Texture();
+        int texture_height = height * 2;
+        if (!target_texture->create(width, texture_height, DXGI_FORMAT_R8_UNORM, true))
           return;        
-
-        // Full Height because we store U and then V
-        target_uv_texture = new Render::Texture();
-        if (!target_uv_texture->create(width / 2, height, DXGI_FORMAT_R8_UNORM, true))
-          return;
       }
     
-      int ysize = width * height;
-      target_y_texture->updateFrom(byteBuffer, buffCurrLen);
-      target_uv_texture->updateFrom(byteBuffer + ysize, buffCurrLen - ysize);
+      Clock clock;
+      target_texture->updateFromIYUV(byteBuffer, buffCurrLen);
+      float elapsed = clock.elapsed();
 
-      dbg("Sample count %d, Sample flags %d, sample duration %I64d, sample time %I64d. CT:%I64d. Buffer: %ld/%ld\n", sampleCount, sampleFlags, llSampleDuration, llVideoTimeStamp, uct, buffCurrLen, buffMaxLen);
+      dbg("Sample count %d, Sample flags %d, sample duration %I64d, sample time %I64d. CT:%I64d. Buffer: %ld/%ld. Elapsed:%f\n", sampleCount, sampleFlags, llSampleDuration, llVideoTimeStamp, uct, buffCurrLen, buffMaxLen, elapsed);
 
       SAFE_RELEASE(buf);
       sampleCount++;
@@ -648,12 +657,12 @@ bool VideoTexture::hasFinished() {
   return internal_data->finished;
 }
 
-Render::Texture* VideoTexture::getYTexture() {
+Render::Texture* VideoTexture::getTexture() {
   assert(internal_data);
-  return internal_data->target_y_texture;
+  return internal_data->target_texture;
 }
 
-Render::Texture* VideoTexture::getUVTexture() {
-  assert(internal_data);
-  return internal_data->target_uv_texture;
+float VideoTexture::getAspectRatio() const {
+  return (float)internal_data->width / (float)internal_data->height;
 }
+

@@ -13,8 +13,8 @@ namespace Render {
   extern ID3D11Device*           device;
   extern ID3D11DeviceContext*    ctx;
   extern ID3D11RenderTargetView* render_target_view;
-  extern uint32_t                width;
-  extern uint32_t                height;
+  extern uint32_t                render_width;
+  extern uint32_t                render_height;
 
   bool create(HWND hWnd);
   void destroy();
@@ -57,7 +57,7 @@ namespace Render {
     bool create(uint32_t xres, uint32_t yres, DXGI_FORMAT new_format, bool is_dynamic);
     void activate(int slot) const;
     void destroy();
-    bool updateFrom(const uint8_t* new_data, size_t data_size);
+    bool updateFromIYUV(const uint8_t* new_data, size_t data_size);
   };
 
   template< typename Data >

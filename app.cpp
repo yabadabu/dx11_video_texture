@@ -89,10 +89,8 @@ void CApp::render() {
   {
     // The video
     pipe_video.activate();
-    video.getYTexture()->activate(0);
-    video.getUVTexture()->activate(1);
-    float ratio = (float)video.getYTexture()->xres / (float)video.getYTexture()->yres;
-    cte.World = (Matrix::CreateTranslation(-0.5f, 0.0f, 0.0f) * Matrix::CreateScale(ratio, 1, 1)).Transpose();
+    video.getTexture()->activate(0);
+    cte.World = (Matrix::CreateTranslation(-0.5f, 0.0f, 0.0f) * Matrix::CreateScale(video.getAspectRatio(), 1, 1)).Transpose();
     cte.uploadToGPU();
     quad.activateAndRender();
   }
@@ -110,7 +108,7 @@ void CApp::update(float dt) {
   Vector3 At(0.0f, .5f, 0.0f);
   Vector3 Up(0.0f, 1.0f, 0.0f);
   cte.View = Matrix::CreateLookAt(Eye, At, Up).Transpose();
-  cte.Projection = Matrix::CreatePerspectiveFieldOfView(65.0f * XM_PI / 180.0f, Render::width / (FLOAT)Render::height, 0.01f, 100.0f).Transpose();
+  cte.Projection = Matrix::CreatePerspectiveFieldOfView(65.0f * XM_PI / 180.0f, Render::render_width / (FLOAT)Render::render_height, 0.01f, 100.0f).Transpose();
 
   video.update(dt);
 }
