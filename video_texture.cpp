@@ -21,13 +21,14 @@
 
 #define CHECK_HR(x, msg) hr = x; if( hr != S_OK ) { dbg(msg); return false; }
 
-//#define SHOW_DEBUG
+//#define SHOW_DEBUG        1
 #if SHOW_DEBUG
 static void dbg(const char* format, ...) {
   va_list argptr;
   va_start(argptr, format);
   char dest[1024 * 4];
   int n = _vsnprintf(dest, sizeof(dest), format, argptr);
+  assert(n < sizeof(dest));
   dest[n] = 0x00;
   va_end(argptr);
   ::OutputDebugString(dest);
@@ -396,6 +397,7 @@ struct VideoTexture::InternalData {
   LONGLONG  video_time = 0;
   bool      finished = false;
   bool      paused = false;
+  bool      autoloop = true;
 
   bool readOutputMediaFormat() {
     assert(pSourceReader);
@@ -549,7 +551,15 @@ public:
     if (flags & MF_SOURCE_READERF_ENDOFSTREAM)
     {
       dbg("\tEnd of stream.\n");
-      finished = true;
+      if (autoloop) {
+        PROPVARIANT var = { 0 };
+        var.vt = VT_I8;
+        hr = pSourceReader->SetCurrentPosition(GUID_NULL, var);
+        if (hr != S_OK) { dbg("Failed to set source reader position."); }
+        clock_time = 0.0f;
+      }
+      else
+        finished = true;
     }
     if (flags & MF_SOURCE_READERF_NEWSTREAM)
     {
