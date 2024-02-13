@@ -427,7 +427,11 @@ struct VideoTexture::InternalData {
 
 public:
 
-  ~InternalData() {
+~InternalData() {
+    if (target_texture) {
+      target_texture->destroy();
+      target_texture = nullptr;
+    }
     SAFE_RELEASE(pSourceResolver);
     SAFE_RELEASE(uSource);
     SAFE_RELEASE(mediaFileSource);
