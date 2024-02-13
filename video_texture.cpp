@@ -541,7 +541,7 @@ public:
       &pVideoSample                   // Receives the sample or NULL.
     );
 
-    if (hr != S_OK) {
+    if (!SUCCEEDED(hr)) {
       finished = true;
       return;
     }
@@ -587,13 +587,13 @@ public:
 
     if (pVideoSample) {
       hr = pVideoSample->SetSampleTime(llVideoTimeStamp);
-      assert( hr == S_OK );
+      assert(SUCCEEDED(hr));
       
       hr = pVideoSample->GetSampleDuration(&llSampleDuration);
-      assert(hr == S_OK);
-      
+      assert(SUCCEEDED(hr));
+
       hr = pVideoSample->GetSampleFlags(&sampleFlags);
-      assert(hr == S_OK);
+      assert(SUCCEEDED(hr));
 
       // 
       IMFMediaBuffer* buf = NULL;
@@ -605,7 +605,7 @@ public:
       byte* byteBuffer = NULL;
       DWORD buffMaxLen = 0, buffCurrLen = 0;
       hr = buf->Lock(&byteBuffer, &buffMaxLen, &buffCurrLen);
-      assert(hr == S_OK);
+      assert(SUCCEEDED(hr));
 
       // Some videos report one resolution and after the first frame change the height to the next multiple of 16 (using the event MF_SOURCE_READERF_CURRENTMEDIATYPECHANGED)
       if (!target_texture) {
@@ -620,19 +620,23 @@ public:
       float elapsed = clock.elapsed();
 
       dbg("Sample count %d, Sample flags %d, sample duration %I64d, sample time %I64d. CT:%I64d. Buffer: %ld/%ld. Elapsed:%f\n", sampleCount, sampleFlags, llSampleDuration, llVideoTimeStamp, uct, buffCurrLen, buffMaxLen, elapsed);
+      
+      hr = buf->Unlock();
+      assert(SUCCEEDED(hr));
 
       SAFE_RELEASE(buf);
       sampleCount++;
+    
+      SAFE_RELEASE(pVideoSample);
     }
 
-    SAFE_RELEASE(pVideoSample);
   }
 
 };
 
 bool VideoTexture::createAPI() {
   HRESULT hr = MFStartup(MF_VERSION);
-  return(hr == S_OK);
+  return SUCCEEDED(hr);
 }
 
 void VideoTexture::destroyAPI() {
