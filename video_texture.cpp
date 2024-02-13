@@ -503,6 +503,9 @@ public:
     if (!readOutputMediaFormat())
       return false;
 
+	CHECK_HR(pSourceReader->SetStreamSelection(MF_SOURCE_READER_FIRST_VIDEO_STREAM, TRUE), "Enable Video Stream");
+	CHECK_HR(pSourceReader->SetStreamSelection(MF_SOURCE_READER_FIRST_AUDIO_STREAM, FALSE), "Disable Audio Stream");
+
     clock_time = 0.0f;
 
     if (target_texture)
