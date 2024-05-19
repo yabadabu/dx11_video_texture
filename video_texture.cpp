@@ -503,8 +503,8 @@ public:
     if (!readOutputMediaFormat())
       return false;
 
-	CHECK_HR(pSourceReader->SetStreamSelection(MF_SOURCE_READER_FIRST_VIDEO_STREAM, TRUE), "Enable Video Stream");
-	CHECK_HR(pSourceReader->SetStreamSelection(MF_SOURCE_READER_FIRST_AUDIO_STREAM, FALSE), "Disable Audio Stream");
+    CHECK_HR(pSourceReader->SetStreamSelection(MF_SOURCE_READER_ALL_STREAMS, FALSE), "Disable All Stream");
+    CHECK_HR(pSourceReader->SetStreamSelection(MF_SOURCE_READER_FIRST_VIDEO_STREAM, TRUE), "Enable Video Stream");
 
     clock_time = 0.0f;
 
